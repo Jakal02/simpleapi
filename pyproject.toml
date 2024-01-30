@@ -12,5 +12,6 @@ license = {text = "MIT"}
 
 dependencies = [
     "fastapi[all]",
-    "pytest"
+    "pytest",       # testing
+    "ruff"          # linting
 ]
