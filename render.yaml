@@ -2,8 +2,9 @@
 services:
   # A Docker web service
   - type: web
-    name: fastapi-example
+    name: deploy-simple
     runtime: python
+    region: ohio
     plan: free
     autoDeploy: false
     buildCommand: python3 -m pip install .
