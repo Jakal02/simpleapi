@@ -25,7 +25,7 @@ jobs:
     - name: GCP SDK Setup
       uses: google-github-actions/setup-gcloud@v2
       with:
-        project_id: ${{ PROJECT_ID }}
+        project_id: ${{ env.PROJECT_ID }}
     
     - name: Build Docker Image
       run: docker build -t $IMAGE_NAME:latest .
