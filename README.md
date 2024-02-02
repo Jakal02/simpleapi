@@ -13,3 +13,9 @@ I want to understand the CD part of CI/CD by deploying to Render.
 Render seems like the fastest solution to a working deployment. Then,
 migrating to the google cloud seems like the best option because Render does
 not seem that cheap, and doesn't provide autoscaling.
+
+
+Instead of deploying to Render. I want github to manage creating and publishing Docker images to Google's Artifact Registry. From there, inside of google we can configure things to automatically start a compute engine with specified images.
+
+Follow this tutorial:
+https://www.youtube.com/watch?v=6dLHcnlPi_U
