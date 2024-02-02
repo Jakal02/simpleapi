@@ -23,7 +23,7 @@ jobs:
         credentials_json: ${{ secrets.GCP_CREDENTIALS }}
     
     - name: GCP SDK Setup
-      uses: google-github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: $PROJECT_ID
     
