@@ -19,3 +19,7 @@ Instead of deploying to Render. I want github to manage creating and publishing 
 
 Follow this tutorial:
 https://www.youtube.com/watch?v=6dLHcnlPi_U
+
+
+
+This was written as part of the next patch version 0.1.1
