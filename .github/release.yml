@@ -13,4 +13,4 @@ changelog:
         - 'internal'
     - title: Other Changes
       labels:
-        "*"
+        - "*"
