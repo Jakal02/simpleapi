@@ -25,3 +25,7 @@ https://www.youtube.com/watch?v=6dLHcnlPi_U
 This was written as part of the next patch version 0.1.1
 
 This was written as part of the next patch. version 0.1.2
+
+This is written as new-feature 1.
+
+This is written as new-feature 2.
