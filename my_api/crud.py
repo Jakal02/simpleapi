@@ -1,19 +1,19 @@
 """
 CRUD features for stuff.
 """
-
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from pydantic import PositiveInt
 from my_api.schemas import CreatePost
 from my_api.models import Post
 
+
 def check_alive(db: Session):
     try:
-        db.execute(text('SELECT 1'))
-        return True
+        num = db.query(Post).count()
+        return num
     except Exception as e:
-        return False
+        return e
 
 
 def get_post_by_id(db: Session, p_id: PositiveInt) -> Post | None:
