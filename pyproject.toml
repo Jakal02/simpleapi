@@ -12,6 +12,7 @@ license = {text = "MIT"}
 
 dependencies = [
     "fastapi[all]",
+    "sqlalchemy",
     "pytest",       # testing
     "ruff"          # linting
 ]
