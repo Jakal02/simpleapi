@@ -2,7 +2,6 @@
 CRUD features for stuff.
 """
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 from pydantic import PositiveInt
 from my_api.schemas import CreatePost
 from my_api.models import Post
