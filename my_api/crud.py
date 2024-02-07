@@ -19,7 +19,7 @@ def get_post_by_id(db: Session, p_id: PositiveInt) -> Post | None:
 
 
 def create_post(db: Session, p_info: CreatePost) -> Post | None:
-    db_post = Post(**p_info.model_dump_json())
+    db_post = Post(**p_info.model_dump())
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
