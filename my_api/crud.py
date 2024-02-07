@@ -9,11 +9,8 @@ from my_api.models import Post
 
 
 def check_alive(db: Session):
-    try:
-        num = db.query(Post).count()
-        return num
-    except Exception as e:
-        return e
+    num = db.query(Post).count()
+    return num
 
 
 def get_post_by_id(db: Session, p_id: PositiveInt) -> Post | None:
