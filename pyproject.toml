@@ -12,7 +12,7 @@ license = {text = "MIT"}
 
 dependencies = [
     "fastapi[all]",
-    "cloud-sql-python-connector[asyncpg]",
+    "cloud-sql-python-connector[pg8000]",
     "sqlalchemy",
     "pytest",       # testing
     "ruff"          # linting
