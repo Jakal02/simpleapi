@@ -32,3 +32,13 @@ def delete_post(db: Session, p_id: PositiveInt) -> Post:
     db.delete(db_post)
     db.commit()
     return db_post
+
+def ghost_delete_post(db: Session, p_id: PositiveInt) -> Post:
+    db_post = get_post_by_id(db, p_id)
+    if db_post is None:
+        return None
+    db_post.is_deleted = True
+    db.add(db_post)
+    db.commit()
+    db.refresh(db_post)
+    return db_post
