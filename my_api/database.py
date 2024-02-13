@@ -31,7 +31,15 @@ def init_connection_pool(connector: Connector) -> Engine:
 connector = Connector()
 
 # create connection pool engine
-engine = init_connection_pool(connector)
+if os.environ.get("NODE") == 'prod':
+    engine = init_connection_pool(connector)
+else:
+    engine = create_engine(
+        "sqlite:///./my_app.db",
+        connect_args={
+            "check_same_thread": False,
+        }
+    )
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

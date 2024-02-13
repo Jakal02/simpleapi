@@ -65,12 +65,20 @@ async def create_post(db: SessionDep, p_info:CreatePost):
 @app.get("/post/{p_id}", response_model = RetrievePost)
 async def get_post(db: SessionDep, p_id: PositiveInt):
     post = cr.get_post_by_id(db, p_id)
-    if post is None:
+    if post is None or post.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {p_id} not found.")
     return post
 
 @app.delete("/post/{p_id}", response_model = RetrievePost)
-async def delete_post(db: SessionDep, p_id: PositiveInt):
+async def ghost_delete_post(db: SessionDep, p_id: PositiveInt):
+    post = cr.get_post_by_id(db, p_id)
+    if post is None or post.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {p_id} not found.")
+    post = cr.ghost_delete_post(db, p_id)
+    return post
+
+@app.delete("/secret/post/{p_id}", response_model = RetrievePost)
+async def actually_delete_post(db: SessionDep, p_id: PositiveInt):
     post = cr.get_post_by_id(db, p_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {p_id} not found.")
