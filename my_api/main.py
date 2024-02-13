@@ -122,4 +122,12 @@ async def delete_all_documents_in_search_index(client: SearchDep):
 
 @app.get("/value/")
 async def read_value():
-    return runner.value
+    return {"value": runner.value, "updated": runner.updated_at}
+
+
+@app.get("/search_index/{doc_id}")
+async def get_document(doc_id: PositiveInt, client: SearchDep):
+    try:
+        return client.index(SEARCH_INDEX_NAME).get_document(doc_id)
+    except MeilisearchApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
