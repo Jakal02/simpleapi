@@ -3,7 +3,10 @@ Main file for my_api.
 """
 from typing import Annotated
 from contextlib import asynccontextmanager
+import os
 from sqlalchemy.orm import Session
+from meilisearch import Client
+from meilisearch.errors import MeilisearchApiError
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
@@ -19,6 +22,19 @@ def get_db():
         db.close()
 
 SessionDep = Annotated[Session, Depends(get_db)]
+
+
+def get_search_client():
+    client = Client(url=os.environ.get("SEARCH_INDEX_URL"), 
+                    api_key=os.environ.get("SEARCH_INDEX_KEY")
+                )
+    try:
+        client.health()
+        yield client
+    except MeilisearchApiError as e:
+        print("Check something.")
+
+SearchDep = Annotated[Client, Depends(get_search_client)]
 
 
 # tables created with alembic at start
@@ -60,3 +76,8 @@ async def delete_post(db: SessionDep, p_id: PositiveInt):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {p_id} not found.")
     post = cr.delete_post(db, p_id)
     return post
+
+
+@app.get("/search_health/")
+async def check_search_connection(m_client: SearchDep):
+    return m_client.health()
