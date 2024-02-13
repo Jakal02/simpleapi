@@ -15,7 +15,6 @@ dependencies = [
     "cloud-sql-python-connector[pg8000]",
     "sqlalchemy",
     "meilisearch",
-    "meilisync",
     "pytest",       # testing
     "ruff"          # linting
 ]
