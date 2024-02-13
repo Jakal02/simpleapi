@@ -1,6 +1,7 @@
 """
 CRUD features for stuff.
 """
+import datetime
 from sqlalchemy.orm import Session
 from pydantic import PositiveInt
 from my_api.schemas import CreatePost
@@ -38,6 +39,7 @@ def ghost_delete_post(db: Session, p_id: PositiveInt) -> Post:
     if db_post is None:
         return None
     db_post.is_deleted = True
+    db_post.date_modified = datetime.datetime.utcnow()
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
