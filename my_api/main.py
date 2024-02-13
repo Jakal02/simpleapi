@@ -10,7 +10,7 @@ from meilisearch.errors import MeilisearchApiError
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
-from my_api.database import SessionLocal, Base, engine
+from my_api.database import SessionLocal, Base, engine, SEARCH_INDEX_NAME
 from my_api.schemas import CreatePost, RetrievePost
 
 
@@ -86,6 +86,22 @@ async def actually_delete_post(db: SessionDep, p_id: PositiveInt):
     return post
 
 
+
 @app.get("/search_health/")
-async def check_search_connection(m_client: SearchDep):
-    return m_client.health()
+async def check_search_connection(client: SearchDep):
+    return client.health()
+
+@app.post("/search_index/")
+async def create_search_index(client: SearchDep):
+    return client.create_index(uid=SEARCH_INDEX_NAME)
+
+@app.delete("/search_index/")
+async def delete_search_index(client: SearchDep):
+    return client.delete_index(uid=SEARCH_INDEX_NAME)
+
+@app.get("/search_index/")
+async def get_search_index(client: SearchDep):
+    try:
+        return client.get_index(uid=SEARCH_INDEX_NAME)
+    except MeilisearchApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
