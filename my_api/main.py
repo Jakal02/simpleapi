@@ -65,7 +65,7 @@ async def create_post(db: SessionDep, p_info:CreatePost):
 @app.get("/post/{p_id}", response_model = RetrievePost)
 async def get_post(db: SessionDep, p_id: PositiveInt):
     post = cr.get_post_by_id(db, p_id)
-    if post is None:
+    if post is None or post.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {p_id} not found.")
     return post
 
