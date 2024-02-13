@@ -4,6 +4,7 @@ Define PyDantic data schemas.
 from datetime import datetime
 from pydantic import BaseModel, PositiveInt
 from pydantic import PlainSerializer
+from pydantic.type_adapter import TypeAdapter
 from typing_extensions import Annotated
 
 
@@ -24,3 +25,5 @@ class RetrievePost(CreatePost):
     id: PositiveInt
     date_modified: MyDateTime
     is_deleted: bool
+
+post_serializer = TypeAdapter(RetrievePost)
