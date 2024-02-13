@@ -105,3 +105,10 @@ async def get_search_index(client: SearchDep):
         return client.get_index(uid=SEARCH_INDEX_NAME)
     except MeilisearchApiError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
+
+@app.delete("/search_index/documents/all/")
+async def delete_all_documents_in_search_index(client: SearchDep):
+    try:
+        return client.index(uid=SEARCH_INDEX_NAME).delete_all_documents()
+    except MeilisearchApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
