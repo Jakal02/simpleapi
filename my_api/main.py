@@ -24,9 +24,9 @@ def get_db():
 SessionDep = Annotated[Session, Depends(get_db)]
 
 
-def get_meili_client():
-    client = Client(url=os.environ.get("MEILI_URL"), 
-                    api_key=os.environ.get("MEILI_KEY")
+def get_search_client():
+    client = Client(url=os.environ.get("SEARCH_INDEX_URL"), 
+                    api_key=os.environ.get("SEARCH_INDEX_KEY")
                 )
     try:
         client.health()
@@ -34,7 +34,7 @@ def get_meili_client():
     except MeilisearchApiError as e:
         print("Check something.")
 
-MeiliDep = Annotated[Client, Depends(get_meili_client)]
+SearchDep = Annotated[Client, Depends(get_search_client)]
 
 
 # tables created with alembic at start
@@ -79,5 +79,5 @@ async def delete_post(db: SessionDep, p_id: PositiveInt):
 
 
 @app.get("/search_health/")
-async def check_meili_search(m_client: MeiliDep):
+async def check_search_connection(m_client: SearchDep):
     return m_client.health()
