@@ -48,3 +48,4 @@ Base = declarative_base()
 
 # SEARCH_INDEX
 SEARCH_INDEX_NAME = "posts"
+SEARCH_SYNCER_DELAY_SECONDS = 3

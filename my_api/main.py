@@ -4,6 +4,7 @@ Main file for my_api.
 from typing import Annotated
 from contextlib import asynccontextmanager
 import os
+import asyncio
 from sqlalchemy.orm import Session
 from meilisearch import Client
 from meilisearch.errors import MeilisearchApiError
@@ -12,6 +13,7 @@ from pydantic import PositiveInt
 import my_api.crud as cr
 from my_api.database import SessionLocal, Base, engine, SEARCH_INDEX_NAME
 from my_api.schemas import CreatePost, RetrievePost
+from my_api.search_sync import BackgroundSearchSyncer
 
 
 def get_db():
@@ -37,11 +39,15 @@ def get_search_client():
 SearchDep = Annotated[Client, Depends(get_search_client)]
 
 
+runner = BackgroundSearchSyncer()
+
 # tables created with alembic at start
 @asynccontextmanager
 async def lifespan(frage: FastAPI):
     Base.metadata.create_all(bind=engine)
+    syncer = asyncio.create_task(runner.run_main())
     yield
+    print(syncer.cancel())
 
 
 app = FastAPI(lifespan=lifespan)
@@ -112,3 +118,8 @@ async def delete_all_documents_in_search_index(client: SearchDep):
         return client.index(uid=SEARCH_INDEX_NAME).delete_all_documents()
     except MeilisearchApiError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
+
+
+@app.get("/value/")
+async def read_value():
+    return runner.value
