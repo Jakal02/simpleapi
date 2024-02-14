@@ -10,7 +10,7 @@ from meilisearch.errors import MeilisearchApiError
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
-from my_api.database import SessionLocal, Base, engine, SEARCH_INDEX_NAME, SessionDep
+from my_api.database import Base, engine, SEARCH_INDEX_NAME, SessionDep
 from my_api.schemas import CreatePost, RetrievePost
 from my_api.search_sync import BackgroundSearchSyncer
 
@@ -22,7 +22,7 @@ def get_search_client():
     try:
         client.health()
         yield client
-    except MeilisearchApiError as e:
+    except MeilisearchApiError:
         print("Check something.")
 
 SearchDep = Annotated[Client, Depends(get_search_client)]
