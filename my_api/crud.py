@@ -49,3 +49,8 @@ def ghost_delete_post(db: Session, p_id: PositiveInt) -> Post:
 def get_all_posts_past_time(db:Session, time: datetime.datetime):
     posts = db.query(Post).filter(Post.date_modified > time).all()
     return posts
+
+
+def get_all_posts(db:Session):
+    posts = db.query(Post).all()
+    return posts

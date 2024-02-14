@@ -26,4 +26,8 @@ class RetrievePost(CreatePost):
     date_modified: MyDateTime
     is_deleted: bool
 
-post_serializer = TypeAdapter(RetrievePost)
+    model_config = {
+        "from_attributes": True,
+    }
+
+post_serializer = TypeAdapter(type=RetrievePost)

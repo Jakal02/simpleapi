@@ -5,11 +5,11 @@ Thank you to: https://github.com/tiangolo/fastapi/issues/2713
 """
 import os
 import asyncio
-import datetime
 from meilisearch import Client
 from my_api.database import SEARCH_SYNCER_DELAY_SECONDS, SEARCH_INDEX_NAME, SessionLocal
 from my_api import crud
 from my_api.schemas import post_serializer
+from my_api.models import Post
 
 
 class BackgroundSearchSyncer:
@@ -26,9 +26,23 @@ class BackgroundSearchSyncer:
         """
         Run the syncing process. If no index exists, create one.
         """
-        indices = self.client.get_indexes().keys()
-        if SEARCH_INDEX_NAME not in indices:
-            self.client.create_index(SEARCH_INDEX_NAME)
+
+        index_objects = self.client.get_indexes().get('results')
+        index_names = [ind.uid for ind in index_objects]
+
+        if SEARCH_INDEX_NAME not in index_names:
+            print("no index detected.")
+            db = SessionLocal()
+            all_posts = crud.get_all_posts(db)
+            db.close()
+            print(all_posts)
+            try:
+                posts_to_index = self.serialize_posts(all_posts)
+            except Exception as e:
+                print(e)
+            print("adding posts:\n", [p['id'] for p in posts_to_index])
+            self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
+
 
         while self.running:
             await asyncio.sleep(SEARCH_SYNCER_DELAY_SECONDS)
@@ -43,9 +57,16 @@ class BackgroundSearchSyncer:
 
             db = SessionLocal()
             posts_past_time = crud.get_all_posts_past_time(db, self.updated_at)
-            if not posts_past_time:
-                continue
-            posts_to_index = [post_serializer.validate_python(post).model_dump() for post in posts_past_time]
-            print("posts ", posts_to_index)
-            self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
             db.close()
+
+            if not posts_past_time:
+                print("no new posts detected")
+                continue
+
+            posts_to_index = self.serialize_posts(posts_past_time)
+            print("posts:\n", posts_to_index)
+            self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
+
+
+    def serialize_posts(self, posts: list[Post]) -> list[dict[str, any]]:
+        return [post_serializer.validate_python(post).model_dump() for post in posts]
