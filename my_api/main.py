@@ -4,24 +4,15 @@ Main file for my_api.
 from typing import Annotated
 from contextlib import asynccontextmanager
 import os
-from sqlalchemy.orm import Session
+import asyncio
 from meilisearch import Client
 from meilisearch.errors import MeilisearchApiError
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
-from my_api.database import SessionLocal, Base, engine
+from my_api.database import SessionLocal, Base, engine, SEARCH_INDEX_NAME, SessionDep
 from my_api.schemas import CreatePost, RetrievePost
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-SessionDep = Annotated[Session, Depends(get_db)]
+from my_api.search_sync import BackgroundSearchSyncer
 
 
 def get_search_client():
@@ -37,11 +28,15 @@ def get_search_client():
 SearchDep = Annotated[Client, Depends(get_search_client)]
 
 
+runner = BackgroundSearchSyncer()
+
 # tables created with alembic at start
 @asynccontextmanager
 async def lifespan(frage: FastAPI):
     Base.metadata.create_all(bind=engine)
+    syncer = asyncio.create_task(runner.run_main())
     yield
+    print(syncer.cancel())
 
 
 app = FastAPI(lifespan=lifespan)
@@ -78,14 +73,51 @@ async def ghost_delete_post(db: SessionDep, p_id: PositiveInt):
     return post
 
 @app.delete("/secret/post/{p_id}", response_model = RetrievePost)
-async def actually_delete_post(db: SessionDep, p_id: PositiveInt):
+async def actually_delete_post(db: SessionDep, client: SearchDep, p_id: PositiveInt):
     post = cr.get_post_by_id(db, p_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {p_id} not found.")
+    client.index(SEARCH_INDEX_NAME).delete_document(p_id)
     post = cr.delete_post(db, p_id)
     return post
 
 
+
 @app.get("/search_health/")
-async def check_search_connection(m_client: SearchDep):
-    return m_client.health()
+async def check_search_connection(client: SearchDep):
+    return client.health()
+
+@app.post("/search_index/")
+async def create_search_index(client: SearchDep):
+    return client.create_index(uid=SEARCH_INDEX_NAME)
+
+@app.delete("/search_index/")
+async def delete_search_index(client: SearchDep):
+    return client.delete_index(uid=SEARCH_INDEX_NAME)
+
+@app.get("/search_index/")
+async def get_search_index(client: SearchDep):
+    try:
+        return client.get_index(uid=SEARCH_INDEX_NAME)
+    except MeilisearchApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+
+@app.delete("/search_index/documents/all/")
+async def delete_all_documents_in_search_index(client: SearchDep):
+    try:
+        return client.index(uid=SEARCH_INDEX_NAME).delete_all_documents()
+    except MeilisearchApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+
+
+@app.get("/value/")
+async def read_value():
+    return {"value": runner.value, "updated": runner.updated_at}
+
+
+@app.get("/search_index/{doc_id}")
+async def get_document(doc_id: PositiveInt, client: SearchDep):
+    try:
+        return client.index(SEARCH_INDEX_NAME).get_document(doc_id)
+    except MeilisearchApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
