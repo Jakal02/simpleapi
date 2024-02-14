@@ -8,7 +8,7 @@ from pydantic.type_adapter import TypeAdapter
 from typing_extensions import Annotated
 
 
-MyDateTime = Annotated[datetime.datetime, PlainSerializer(lambda x: x.isoformat(), return_type=str)]
+MyDateTime = Annotated[datetime, PlainSerializer(lambda x: x.isoformat(), return_type=str)]
 
 class CreatePost(BaseModel):
     """
