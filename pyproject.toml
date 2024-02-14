@@ -14,6 +14,7 @@ dependencies = [
     "fastapi[all]",
     "cloud-sql-python-connector[pg8000]",
     "sqlalchemy",
+    "meilisearch",
     "pytest",       # testing
     "ruff"          # linting
 ]

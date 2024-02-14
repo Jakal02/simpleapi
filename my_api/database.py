@@ -1,6 +1,8 @@
+from typing_extensions import Annotated
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.engine import Engine
+from fastapi import Depends
 from google.cloud.sql.connector import Connector, IPTypes
 import os
 
@@ -31,10 +33,32 @@ def init_connection_pool(connector: Connector) -> Engine:
 connector = Connector()
 
 # create connection pool engine
-engine = init_connection_pool(connector)
+if os.environ.get("NODE") == 'prod':
+    engine = init_connection_pool(connector)
+else:
+    engine = create_engine(
+        "sqlite:///./my_app.db",
+        connect_args={
+            "check_same_thread": False,
+        }
+    )
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+SessionDep = Annotated[Session, Depends(get_db)]
+
+
+# SEARCH_INDEX
+SEARCH_INDEX_NAME = "posts"
+SEARCH_SYNCER_DELAY_SECONDS = 3
