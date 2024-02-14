@@ -6,7 +6,7 @@ Thank you to: https://github.com/tiangolo/fastapi/issues/2713
 import os
 import asyncio
 from meilisearch import Client
-from my_api.database import SEARCH_SYNCER_DELAY_SECONDS, SEARCH_INDEX_NAME, SessionLocal
+from my_api.database import SEARCH_SYNCER_DELAY_SECONDS, SEARCH_INDEX_NAME, get_db
 from my_api import crud
 from my_api.schemas import post_serializer
 from my_api.models import Post
@@ -32,14 +32,10 @@ class BackgroundSearchSyncer:
 
         if SEARCH_INDEX_NAME not in index_names:
             print("no index detected.")
-            db = SessionLocal()
-            all_posts = crud.get_all_posts(db)
-            db.close()
-            print(all_posts)
-            try:
-                posts_to_index = self.serialize_posts(all_posts)
-            except Exception as e:
-                print(e)
+            for db in get_db():
+                all_posts = crud.get_all_posts(db)
+
+            posts_to_index = self.serialize_posts(all_posts)
             print("adding posts:\n", [p['id'] for p in posts_to_index])
             self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
 
@@ -55,9 +51,8 @@ class BackgroundSearchSyncer:
             self.updated_at = self.client.index(uid=SEARCH_INDEX_NAME).fetch_info().updated_at
             self.value += 1
 
-            db = SessionLocal()
-            posts_past_time = crud.get_all_posts_past_time(db, self.updated_at)
-            db.close()
+            for db in get_db():
+                posts_past_time = crud.get_all_posts_past_time(db, self.updated_at)
 
             if not posts_past_time:
                 print("no new posts detected")

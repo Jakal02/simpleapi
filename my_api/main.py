@@ -5,25 +5,14 @@ from typing import Annotated
 from contextlib import asynccontextmanager
 import os
 import asyncio
-from sqlalchemy.orm import Session
 from meilisearch import Client
 from meilisearch.errors import MeilisearchApiError
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
-from my_api.database import SessionLocal, Base, engine, SEARCH_INDEX_NAME
+from my_api.database import SessionLocal, Base, engine, SEARCH_INDEX_NAME, SessionDep
 from my_api.schemas import CreatePost, RetrievePost
 from my_api.search_sync import BackgroundSearchSyncer
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-SessionDep = Annotated[Session, Depends(get_db)]
 
 
 def get_search_client():
