@@ -3,9 +3,13 @@ Defines a task to run and constantly refresh the search index.
 
 Thank you to: https://github.com/tiangolo/fastapi/issues/2713
 """
+
+from __future__ import annotations
+
 import os
 import asyncio
-from meilisearch import Client
+from typing import Any
+from meilisearch_python_sdk import AsyncClient
 from my_api.database import SEARCH_SYNCER_DELAY_SECONDS, SEARCH_INDEX_NAME, get_db
 from my_api import crud
 from my_api.schemas import post_serializer
@@ -17,17 +21,17 @@ class BackgroundSearchSyncer:
         self.value = 0
         self.running = True
         self.updated_at = None
-        self.client = Client(url=os.environ.get("SEARCH_INDEX_URL"), 
-                            api_key=os.environ.get("SEARCH_INDEX_KEY")
-                        )
-
+        self.client = AsyncClient(
+            url=os.environ.get("SEARCH_INDEX_URL"),
+            api_key=os.environ.get("SEARCH_INDEX_KEY"),
+        )
 
     async def run_main(self):
         """
         Run the syncing process. If no index exists, create one.
         """
-
-        index_objects = self.client.get_indexes().get('results')
+        indexes = await self.client.get_indexes()
+        index_objects = indexes.results
         index_names = [ind.uid for ind in index_objects]
 
         if SEARCH_INDEX_NAME not in index_names:
@@ -36,9 +40,8 @@ class BackgroundSearchSyncer:
                 all_posts = crud.get_all_posts(db)
 
             posts_to_index = self.serialize_posts(all_posts)
-            print("adding posts:\n", [p['id'] for p in posts_to_index])
-            self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
-
+            print("adding posts:\n", [p["id"] for p in posts_to_index])
+            await self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
 
         while self.running:
             await asyncio.sleep(SEARCH_SYNCER_DELAY_SECONDS)
@@ -48,7 +51,10 @@ class BackgroundSearchSyncer:
             2. Select all posts with date_modified > time updated
             3. bulk insert
             """
-            self.updated_at = self.client.index(uid=SEARCH_INDEX_NAME).fetch_info().updated_at
+            updated_at = (
+                await self.client.index(uid=SEARCH_INDEX_NAME).fetch_info().updated_at
+            )
+            self.updated_at = updated_at
             self.value += 1
 
             for db in get_db():
@@ -60,8 +66,7 @@ class BackgroundSearchSyncer:
 
             posts_to_index = self.serialize_posts(posts_past_time)
             print("posts:\n", posts_to_index)
-            self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
+            await self.client.index(SEARCH_INDEX_NAME).add_documents(posts_to_index)
 
-
-    def serialize_posts(self, posts: list[Post]) -> list[dict[str, any]]:
+    def serialize_posts(self, posts: list[Post]) -> list[dict[str, Any]]:
         return [post_serializer.validate_python(post).model_dump() for post in posts]
