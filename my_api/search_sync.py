@@ -37,7 +37,7 @@ class BackgroundSearchSyncer:
         if SEARCH_INDEX_NAME not in index_names:
             print("no index detected.")
             for db in get_db():
-                all_posts = crud.get_all_posts(db)
+                all_posts = crud.get_all_posts_past_time(db)
 
             posts_to_index = self.serialize_posts(all_posts)
             print("adding posts:\n", [p["id"] for p in posts_to_index])

@@ -29,11 +29,10 @@ def init_connection_pool(connector: Connector) -> Engine:
     )
     return engine
 
-# initialize Cloud SQL Python Connector
-connector = Connector()
-
 # create connection pool engine
 if os.environ.get("NODE") == 'prod':
+    # initialize Cloud SQL Python Connector
+    connector = Connector()
     engine = init_connection_pool(connector)
 else:
     engine = create_engine(
