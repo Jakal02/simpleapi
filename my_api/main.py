@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 import os
 import asyncio
 from meilisearch_python_sdk import AsyncClient
-from meilisearch.errors import MeilisearchApiError
+from meilisearch_python_sdk.errors import MeilisearchApiError
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
