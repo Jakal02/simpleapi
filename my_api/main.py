@@ -11,7 +11,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import PositiveInt
 import my_api.crud as cr
 from my_api.database import Base, engine, SEARCH_INDEX_NAME, SessionDep
-from my_api.schemas import CreatePost, RetrievePost
+from my_api.schemas import CreatePost, RetrievePost, MeiliSearchTaskInfo
 from my_api.search_sync import BackgroundSearchSyncer
 
 
@@ -99,9 +99,12 @@ async def check_search_connection(client: SearchDep):
     return await client.health()
 
 
-@app.post("/search_index/")
+@app.post("/search_index/", response_model=MeiliSearchTaskInfo)
 async def create_search_index(client: SearchDep):
-    return await client.create_index(uid=SEARCH_INDEX_NAME)
+    resp = await client.create_index(uid=SEARCH_INDEX_NAME)
+    resp_d = resp.__dict__
+    print(resp_d)
+    return resp_d
 
 
 @app.delete("/search_index/")
@@ -112,7 +115,12 @@ async def delete_search_index(client: SearchDep):
 @app.get("/search_index/")
 async def get_search_index(client: SearchDep):
     try:
-        return await client.get_index(uid=SEARCH_INDEX_NAME)
+        temp = await client.get_index(uid=SEARCH_INDEX_NAME)
+        print(temp.__dict__)
+        return_dict = temp.__dict__
+        return_dict.pop("http_client")
+        return_dict.pop("_http_requests")
+        return temp.__dict__
     except MeilisearchApiError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
 

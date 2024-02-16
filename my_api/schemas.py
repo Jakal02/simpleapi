@@ -31,3 +31,9 @@ class RetrievePost(CreatePost):
     }
 
 post_serializer = TypeAdapter(type=RetrievePost)
+
+
+class MeiliSearchTaskInfo(BaseModel):
+    uid: str
+    created_at: MyDateTime
+    updated_at: MyDateTime
